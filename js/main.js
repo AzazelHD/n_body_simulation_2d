@@ -25,24 +25,24 @@ const camera = new THREE.OrthographicCamera(
 );
 camera.position.z = 10;
 
-const numSteps = 1;
+const dt = 0.5;
 const G = 10;
 
 // const cx = canvas.width / 2;
 // const cy = canvas.height / 2;
 
-const pos1 = new THREE.Vector2(0, 200);
+const pos1 = new THREE.Vector2(0, 0);
 const pos2 = new THREE.Vector2(0, 400);
-// const pos3 = new THREE.Vector2(cx, cy - 250);
+const pos3 = new THREE.Vector2(0, 200);
 
-const vel1 = new THREE.Vector2(1, 0);
+const vel1 = new THREE.Vector2(0, 0);
 const vel2 = new THREE.Vector2(-1, 0);
-// const vel3 = new THREE.Vector2(20, 0);
+const vel3 = new THREE.Vector2(2, 0);
 
 const bodies = [
   new CelestialBody(pos1, vel1, 100, "white", scene),
-  new CelestialBody(pos2, vel2, 100, "red", scene),
-  // new CelestialBody(pos3, vel3, 500, "teal"),
+  // new CelestialBody(pos2, vel2, 200, "red", scene),
+  // new CelestialBody(pos3, vel3, 500, "teal", scene),
 ];
 
 function simulate(dt) {
@@ -89,10 +89,10 @@ function simulate(dt) {
 
 document.body.onkeydown = function (e) {
   if (e.key == " " || e.code == "Space" || e.keyCode == 32) {
-    simulate(1 / numSteps);
+    simulate(dt);
   }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  simulate(1 / numSteps);
+  simulate(dt);
 });

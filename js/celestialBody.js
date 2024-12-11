@@ -5,9 +5,10 @@ export class CelestialBody {
     this.mass = mass;
     this.position = pos;
     this.velocity = vel;
+    this.acceleration = new THREE.Vector2();
     this.color = color;
 
-    const geometry = new THREE.CircleGeometry(20, 32);
+    const geometry = new THREE.CircleGeometry(Math.sqrt(this.mass), 32);
     const material = new THREE.MeshBasicMaterial({ color: this.color });
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.position.set(this.position.x, this.position.y);
