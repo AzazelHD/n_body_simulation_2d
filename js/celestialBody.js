@@ -21,12 +21,11 @@ export class CelestialBody {
     const force = (G * this.mass * other.mass) / distanceSq;
 
     const direction = r.normalize();
-    const acceleration = direction.multiplyScalar(force / this.mass);
-    this.velocity.add(acceleration);
+    this.acceleration = direction.multiplyScalar(force / this.mass);
   }
 
   updateVelocity(dt = 1) {
-    this.velocity.multiplyScalar(dt);
+    this.velocity.add(this.acceleration.clone().multiplyScalar(dt));
   }
 
   updatePosition(dt = 1) {

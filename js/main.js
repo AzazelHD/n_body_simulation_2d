@@ -25,11 +25,11 @@ const camera = new THREE.OrthographicCamera(
 );
 camera.position.z = 10;
 
-const numSteps = 2;
+const numSteps = 1;
 const G = 10;
 
-const cx = canvas.width / 2;
-const cy = canvas.height / 2;
+// const cx = canvas.width / 2;
+// const cy = canvas.height / 2;
 
 const pos1 = new THREE.Vector2(0, 200);
 const pos2 = new THREE.Vector2(0, 400);
