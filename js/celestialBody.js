@@ -8,7 +8,7 @@ export class CelestialBody {
     this.acceleration = new THREE.Vector2();
     this.color = color;
 
-    const geometry = new THREE.CircleGeometry(Math.sqrt(this.mass), 32);
+    const geometry = new THREE.CircleGeometry(2 * Math.sqrt(this.mass), 32);
     const material = new THREE.MeshBasicMaterial({ color: this.color });
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.position.set(this.position.x, this.position.y);
@@ -19,21 +19,21 @@ export class CelestialBody {
     const r = other.position.clone().sub(this.position);
     const distanceSq = r.lengthSq();
     const force = (G * this.mass * other.mass) / distanceSq;
+    console.log(force);
 
-    const direction = r.normalize();
-    this.acceleration = direction.multiplyScalar(force / this.mass);
+    this.acceleration = r.normalize().multiplyScalar(force / this.mass);
   }
 
   updateVelocity(dt = 1) {
-    this.velocity.add(this.acceleration.clone().multiplyScalar(dt));
+    this.velocity.add(this.acceleration.multiplyScalar(dt));
   }
 
   updatePosition(dt = 1) {
-    this.position.add(this.velocity.clone().multiplyScalar(dt));
-    this.mesh.position.set(this.position.x, this.position.y, 0);
+    this.position.add(this.velocity.multiplyScalar(dt));
+    this.mesh.position.set(this.position.x, this.position.y);
   }
 
   draw() {
-    this.mesh.position.set(this.position.x, this.position.y, 0);
+    this.mesh.position.set(this.position.x, this.position.y);
   }
 }
