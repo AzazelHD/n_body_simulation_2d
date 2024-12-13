@@ -36,7 +36,7 @@ const bodies = [
   // new CelestialBody(pos3, vel3, 500, "teal", scene),
 ];
 
-let steps = 10;
+let steps = 1;
 let dt = 1;
 let G = 1;
 
@@ -53,11 +53,11 @@ function simulate(dt, G = 1) {
   bodies.forEach((body) => {
     body.updateVelocity(dt);
     body.updatePosition(dt);
-    body.draw();
+    // body.draw();
   });
 
   renderer.render(scene, camera);
-  // requestAnimationFrame(() => simulate(dt, G));
+  requestAnimationFrame(() => simulate(dt, G));
 }
 
 document.body.onkeydown = function (e) {
@@ -68,6 +68,9 @@ document.body.onkeydown = function (e) {
 
 document.addEventListener("DOMContentLoaded", () => {
   for (let i = 0; i < steps; i++) {
-    // simulate(1 / steps, G);
+    simulate(dt, G);
   }
+  bodies.forEach((body) => {
+    body.draw();
+  });
 });

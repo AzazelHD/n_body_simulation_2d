@@ -19,17 +19,16 @@ export class CelestialBody {
     const r = other.position.clone().sub(this.position);
     const distanceSq = r.lengthSq();
     const force = (G * this.mass * other.mass) / distanceSq;
-    console.log(force);
 
     this.acceleration = r.normalize().multiplyScalar(force / this.mass);
   }
 
   updateVelocity(dt = 1) {
-    this.velocity.add(this.acceleration.multiplyScalar(dt));
+    this.velocity.add(this.acceleration.clone().multiplyScalar(dt));
   }
 
   updatePosition(dt = 1) {
-    this.position.add(this.velocity.multiplyScalar(dt));
+    this.position.add(this.velocity.clone().multiplyScalar(dt));
     this.mesh.position.set(this.position.x, this.position.y);
   }
 
