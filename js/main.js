@@ -36,41 +36,37 @@ const bodies = [
   // new CelestialBody(pos3, vel3, 500, "teal", scene),
 ];
 
-let steps = 1;
+let steps = 5;
 let dt = 1;
 let G = 1;
 
-function simulate(dt, G = 1) {
-  // Apply gravitational forces
-  for (let i = 0; i < bodies.length; i++) {
-    for (let j = i + 1; j < bodies.length; j++) {
-      bodies[i].applyGravity(bodies[j], 0);
-      bodies[j].applyGravity(bodies[i], G);
+function simulate(dt, steps = 1, G = 1) {
+  for (let i = 0; i < steps; i++) {
+    // Apply gravitational forces
+    for (let i = 0; i < bodies.length; i++) {
+      for (let j = i + 1; j < bodies.length; j++) {
+        bodies[i].applyGravity(bodies[j], 0);
+        bodies[j].applyGravity(bodies[i], G);
+      }
     }
+
+    // Update and draw bodies
+    bodies.forEach((body) => {
+      body.updateVelocity(dt / steps);
+      body.updatePosition(dt / steps);
+    });
   }
 
-  // Update and draw bodies
-  bodies.forEach((body) => {
-    body.updateVelocity(dt);
-    body.updatePosition(dt);
-    // body.draw();
-  });
-
   renderer.render(scene, camera);
-  requestAnimationFrame(() => simulate(dt, G));
+  requestAnimationFrame(() => simulate(dt, steps, G));
 }
 
 document.body.onkeydown = function (e) {
   if (e.key == " " || e.code == "Space" || e.keyCode == 32) {
-    simulate(dt, G);
+    simulate(dt, steps, G);
   }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  for (let i = 0; i < steps; i++) {
-    simulate(dt, G);
-  }
-  bodies.forEach((body) => {
-    body.draw();
-  });
+  simulate(dt, steps, G);
 });

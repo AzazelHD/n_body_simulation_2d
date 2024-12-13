@@ -31,8 +31,4 @@ export class CelestialBody {
     this.position.add(this.velocity.clone().multiplyScalar(dt));
     this.mesh.position.set(this.position.x, this.position.y);
   }
-
-  draw() {
-    this.mesh.position.set(this.position.x, this.position.y);
-  }
 }
