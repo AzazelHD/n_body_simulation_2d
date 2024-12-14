@@ -3,13 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3 Body Problem</title>
+    <title>N Body Problem</title>
     <link rel="stylesheet" href="css/styles.css" />
     <script type="module" src="js/main.js"></script>
   </head>
   <body>
     <main>
       <canvas id="canvas"></canvas>
+      <div id="controlsContainer">
+        <button id="toggleUI">Show Controls</button>
+        <form id="controls" hidden>
+          <fieldset>
+            <legend>Simulation Parameters</legend>
+            <label>
+              Speed:
+              <input type="range" id="dtInput" min="0.1" max="5" step="0.1" value="1" />
+              <output id="dtValue"></output>
+            </label>
+            <label>
+              Accuracy:
+              <input type="range" id="stepsInput" min="1" max="20" step="1" value="1" />
+              <output id="stepsValue"></output>
+            </label>
+            <button type="button" id="startSimulation">Start Simulation</button>
+            <button type="button" id="restartSimulation">Restart Simulation</button>
+          </fieldset>
+        </form>
+      </div>
     </main>
+
+    <script>
+      // Get elements
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => document.querySelectorAll(selector);
+      const toggleUIButton = $("#toggleUI");
+      const controlsForm = $("#controls");
+
+      // Toggle UI visibility
+      toggleUIButton.addEventListener("click", () => {
+        if (controlsForm.hasAttribute("hidden")) {
+          controlsForm.removeAttribute("hidden");
+          toggleUIButton.textContent = "Hide Controls";
+        } else {
+          controlsForm.setAttribute("hidden", "");
+          toggleUIButton.textContent = "Show Controls";
+        }
+      });
+    </script>
   </body>
 </html>
