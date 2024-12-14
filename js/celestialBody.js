@@ -20,7 +20,7 @@ export class CelestialBody {
     const distanceSq = r.lengthSq();
     const force = (G * this.mass * other.mass) / distanceSq;
 
-    this.acceleration = r.normalize().multiplyScalar(force / this.mass);
+    this.acceleration.add(r.normalize().multiplyScalar(force / this.mass));
   }
 
   updateVelocity(dt = 1) {
@@ -30,5 +30,6 @@ export class CelestialBody {
   updatePosition(dt = 1) {
     this.position.add(this.velocity.clone().multiplyScalar(dt));
     this.mesh.position.set(this.position.x, this.position.y);
+    this.acceleration.set(0, 0);
   }
 }

@@ -12,7 +12,7 @@ const pos3 = new THREE.Vector2(0, 200);
 
 const vel1 = new THREE.Vector2(0, 0);
 const vel2 = new THREE.Vector2(-5, 0);
-const vel3 = new THREE.Vector2(2, 0);
+const vel3 = new THREE.Vector2(5, 0);
 
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ canvas: canvas });
@@ -22,7 +22,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 const bodies = [
   new CelestialBody(pos1, vel1, 4000, "white", scene),
   new CelestialBody(pos2, vel2, 100, "red", scene),
-  // new CelestialBody(pos3, vel3, 500, "teal", scene),
+  new CelestialBody(pos3, vel3, 100, "teal", scene),
 ];
 
 let zoom = 1;
@@ -47,7 +47,7 @@ const stepsValue = $("#stepsValue");
 
 // Simulation parameters
 let steps = 1;
-let dt = 1;
+let dt = 0.1;
 let G = 1;
 
 dtInput.value = dt;
@@ -75,7 +75,7 @@ function simulate(dt, steps = 1, G = 1) {
     // Apply gravitational forces
     for (let i = 0; i < bodies.length; i++) {
       for (let j = i + 1; j < bodies.length; j++) {
-        bodies[i].applyGravity(bodies[j], 0);
+        bodies[i].applyGravity(bodies[j], G);
         bodies[j].applyGravity(bodies[i], G);
       }
     }
