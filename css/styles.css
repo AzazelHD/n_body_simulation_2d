@@ -75,7 +75,7 @@ canvas {
   background-color: #5e5e5e;
 }
 
-#startSimulation,
+#resumeSimulation,
 #restartSimulation {
   border: none;
   border-radius: 4px;
@@ -84,10 +84,8 @@ canvas {
   background-color: #3d3d3d;
   white-space: nowrap;
   text-align: center;
-  cursor: not-allowed;
-  text-decoration: line-through;
 }
-#startSimulation:hover,
+#resumeSimulation:hover,
 #restartSimulation:hover {
   background-color: #5e5e5e;
 }

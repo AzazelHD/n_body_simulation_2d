@@ -1,35 +1,67 @@
 import * as THREE from "three";
 
 export class CelestialBody {
-  constructor(pos, vel, mass, color, scene) {
-    this.mass = mass;
-    this.position = pos;
-    this.velocity = vel;
-    this.acceleration = new THREE.Vector2();
-    this.color = color;
+  #scene;
+  #geometry;
+  #material;
 
-    const geometry = new THREE.CircleGeometry(2 * Math.sqrt(this.mass), 32);
-    const material = new THREE.MeshBasicMaterial({ color: this.color });
-    this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.position.set(this.position.x, this.position.y);
-    scene.add(this.mesh);
+  constructor(initialPos, initialVel, mass, color, scene) {
+    this.initialState = {
+      position: initialPos.clone(),
+      velocity: initialVel.clone(),
+      mass,
+      color,
+    };
+
+    this.state = {
+      position: initialPos.clone(),
+      velocity: initialVel.clone(),
+      acceleration: new THREE.Vector2(0, 0),
+    };
+
+    this.#geometry = new THREE.CircleGeometry(2 * Math.sqrt(mass), 32);
+    this.#material = new THREE.MeshBasicMaterial({ color });
+    this.mesh = new THREE.Mesh(this.#geometry, this.#material);
+
+    this.#scene = scene;
+    this.updateMeshPosition();
+    this.#scene.add(this.mesh);
   }
 
   applyGravity(other, G = 6.6743e-11) {
-    const r = other.position.clone().sub(this.position);
+    const r = other.state.position.clone().sub(this.state.position);
     const distanceSq = r.lengthSq();
-    const force = (G * this.mass * other.mass) / distanceSq;
-
-    this.acceleration.add(r.normalize().multiplyScalar(force / this.mass));
+    const force = (G * this.initialState.mass * other.initialState.mass) / distanceSq;
+    this.state.acceleration.add(r.normalize().multiplyScalar(force / this.initialState.mass));
   }
 
   updateVelocity(dt = 1) {
-    this.velocity.add(this.acceleration.clone().multiplyScalar(dt));
+    this.state.velocity.add(this.state.acceleration.clone().multiplyScalar(dt));
+    this.state.acceleration.set(0, 0);
   }
 
   updatePosition(dt = 1) {
-    this.position.add(this.velocity.clone().multiplyScalar(dt));
-    this.mesh.position.set(this.position.x, this.position.y);
-    this.acceleration.set(0, 0);
+    this.state.position.add(this.state.velocity.clone().multiplyScalar(dt));
+    this.updateMeshPosition();
+  }
+
+  updateMeshPosition() {
+    this.mesh.position.set(this.state.position.x, this.state.position.y);
+  }
+
+  reset() {
+    // Restore state from initial conditions
+    this.state.position.copy(this.initialState.position);
+    this.state.velocity.copy(this.initialState.velocity);
+    this.state.acceleration.set(0, 0);
+
+    // Update mesh position
+    this.updateMeshPosition();
+  }
+
+  dispose() {
+    this.#scene.remove(this.mesh);
+    this.#geometry.dispose();
+    this.#material.dispose();
   }
 }
