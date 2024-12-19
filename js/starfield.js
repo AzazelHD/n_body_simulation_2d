@@ -1,63 +1,158 @@
 import * as THREE from "three";
 
+// export class Starfield {
+//   constructor(scene, camera) {
+//     this.scene = scene;
+//     this.camera = camera;
+
+//     // Parameters
+//     this.starsCount = 1000; // Number of stars
+//     this.starSize = 1; // Base size of the stars
+//     this.starFieldRadius = 500; // The "radius" of the starfield
+
+//     // Create the starfield
+//     this.createStarfield();
+//   }
+
+//   createStarfield() {
+//     const particlesGeometry = new THREE.BufferGeometry();
+//     const positions = [];
+//     const sizes = [];
+
+//     // Randomly distribute stars in 3D space
+//     for (let i = 0; i < this.starsCount; i++) {
+//       positions.push(Math.random() * this.starFieldRadius * 2 - this.starFieldRadius); // x
+//       positions.push(Math.random() * this.starFieldRadius * 2 - this.starFieldRadius); // y
+//       positions.push(Math.random() * this.starFieldRadius * 2 - this.starFieldRadius); // z
+//       sizes.push(this.starSize); // All stars are the same size
+//     }
+
+//     particlesGeometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+//     particlesGeometry.setAttribute("size", new THREE.Float32BufferAttribute(sizes, 1));
+
+//     // Particle material
+//     const particlesMaterial = new THREE.PointsMaterial({
+//       color: 0xffffff, // White stars
+//       size: this.starSize, // Star size
+//       sizeAttenuation: false, // Prevent size decrease with camera distance
+//       transparent: true,
+//       opacity: 0.7, // Slight transparency
+//     });
+
+//     // Create the particle system
+//     this.particles = new THREE.Points(particlesGeometry, particlesMaterial);
+//     this.scene.add(this.particles);
+//   }
+
+//   update() {
+//     // Make the stars rotate slowly to create a dynamic background
+//     this.particles.rotation.x += 0.001;
+//     this.particles.rotation.y += 0.001;
+//   }
+// }
+
 export class Starfield {
   #scene;
-  #geometry;
-  #material;
-  #points;
+  #starCount;
+  #size;
 
-  constructor(stars, size, boundary, scene) {
-    this.stars = stars;
-    this.size = size;
-    this.initialBoundary = boundary;
-    this.boundary = boundary;
+  constructor(scene, starCount = 1000, size = 50) {
     this.#scene = scene;
+    this.#starCount = starCount;
+    this.#size = size;
+
+    // Create the starfield
     this.#createStarfield();
-    console.log("SF", this.boundary);
   }
 
+  // Method to create the starfield
   #createStarfield() {
-    this.#geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(this.stars * 3);
+    // Create geometry for the stars
+    const geometry = new THREE.BufferGeometry();
 
-    for (let i = 0; i < positions.length; i++) {
-      positions[3 * i] = (Math.random() - 0.5) * this.boundary;
-      positions[3 * i + 1] = (Math.random() - 0.5) * this.boundary;
-      positions[3 * i + 2] = -10;
+    // Arrays to hold the positions, colors, and sizes of the stars
+    const positions = new Float32Array(this.#starCount * 3);
+    const colors = new Float32Array(this.#starCount * 3);
+    const sizes = new Float32Array(this.#starCount);
+
+    // Randomly generate the starfield
+    for (let i = 0; i < this.#starCount; i++) {
+      const x = Math.random() * 2 - 1;
+      const y = Math.random() * 2 - 1;
+      const z = -10;
+
+      positions[i * 3] = x * 2000;
+      positions[i * 3 + 1] = y * 2000;
+      positions[i * 3 + 2] = z;
+
+      // White color for the stars
+      colors[i * 3] = 1.0; // R
+      colors[i * 3 + 1] = 1.0; // G
+      colors[i * 3 + 2] = 1.0; // B
+
+      // Random star size
+      sizes[i] = Math.random() * 3 + 1; // Between 1 and 4
     }
 
-    this.#geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    // Set geometry attributes
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("customColor", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
 
-    this.#material = new THREE.PointsMaterial({
-      color: 0xffffff,
+    // Shader material for the stars
+    const shaderMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        color: { value: new THREE.Color(0xffffff) }, // White color
+      },
+      vertexShader: this.#vertexShader(),
+      fragmentShader: this.#fragmentShader(),
+      blending: THREE.AdditiveBlending,
       transparent: true,
-      opacity: 0.8,
-      size: this.size,
     });
 
-    this.#points = new THREE.Points(this.#geometry, this.#material);
-    this.#scene.add(this.#points);
+    // Create Points system
+    this.starfield = new THREE.Points(geometry, shaderMaterial);
+
+    // Add to the scene
+    this.#scene.add(this.starfield);
   }
 
-  animate(offsetX, offsetY, speed) {
-    const positions = this.#geometry.getAttribute("position").array;
-    for (let i = 0; i < this.stars; i++) {
-      positions[3 * i] += offsetX * speed;
-      positions[3 * i + 1] += offsetY * speed;
-
-      // Wrap around dynamically calculated boundary
-      if (positions[3 * i] > this.boundary >> 1) positions[3 * i] -= this.boundary;
-      if (positions[3 * i] < -this.boundary >> 1) positions[3 * i] += this.boundary;
-      if (positions[3 * i + 1] > this.boundary >> 1) positions[3 * i + 1] -= this.boundary;
-      if (positions[3 * i + 1] < -this.boundary >> 1) positions[3 * i + 1] += this.boundary;
-    }
-
-    this.#geometry.attributes.position.needsUpdate = true;
+  // Vertex Shader
+  #vertexShader() {
+    return `
+        attribute vec3 customColor;
+        attribute float size;
+        varying vec3 vColor;
+        void main() {
+            vColor = customColor;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = size * (300.0 / -mvPosition.z); // Size based on distance
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `;
   }
 
-  dispose() {
-    this.#scene.remove(this.#points);
-    this.#geometry.dispose();
-    this.#material.dispose();
+  // Fragment Shader
+  #fragmentShader() {
+    return `
+        uniform vec3 color;
+        varying vec3 vColor;
+        void main() {
+            gl_FragColor = vec4(vColor * color, 1.0); // White color
+        }
+    `;
+  }
+
+  // Update method (optional, for animations or dynamic changes)
+  update() {
+    // You can add dynamic updates here (e.g., animate starfield movement, color changes, etc.)
+    // For example, rotating the starfield:
+    // this.starfield.rotation.x += 0.001;
+    // this.starfield.rotation.y += 0.001;
+  }
+
+  // Optionally remove the starfield from the scene
+  remove() {
+    this.#scene.remove(this.starfield);
   }
 }

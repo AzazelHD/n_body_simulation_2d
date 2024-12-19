@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Starfield } from "./starfield.js";
 import { CelestialBody } from "./celestialBody.js";
+// import { StarfieldShader } from "./shader.js";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
@@ -21,8 +22,8 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 // Celestial Bodies initialization
 const bodies = [
-  new CelestialBody(pos1, vel1, 1000, "white", scene),
-  new CelestialBody(pos2, vel2, 100, "red", scene),
+  // new CelestialBody(pos1, vel1, 1000, "white", scene),
+  // new CelestialBody(pos2, vel2, 100, "red", scene),
   new CelestialBody(pos3, vel3, 100, "teal", scene),
 ];
 
@@ -51,12 +52,7 @@ dtValue.textContent = dt;
 stepsInput.value = steps;
 stepsValue.textContent = steps;
 
-const starfield = new Starfield(
-  1000,
-  1,
-  Math.max(camera.right - camera.left, camera.top - camera.bottom),
-  scene
-);
+const starfield = new Starfield(scene, 1000, 5);
 
 let simulationId = 0;
 const xmove = Math.random() * 2 - 1;
@@ -76,7 +72,10 @@ function simulate(dt, steps = 1, G = 1) {
       body.updatePosition(dt / steps);
     });
   }
-  starfield.animate(xmove, ymove, dt * 0.5);
+
+  // camera.position.set(...bodies[1].state.position);
+
+  starfield.update();
 
   renderer.render(scene, camera);
   simulationId = requestAnimationFrame(() => simulate(dt, steps, G));
