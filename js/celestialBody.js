@@ -4,6 +4,7 @@ export class CelestialBody {
   #scene;
   #geometry;
   #material;
+  #mesh;
 
   constructor(initialPos, initialVel, mass, color, scene) {
     this.initialState = {
@@ -21,11 +22,11 @@ export class CelestialBody {
 
     this.#geometry = new THREE.CircleGeometry(2 * Math.sqrt(mass), 32);
     this.#material = new THREE.MeshBasicMaterial({ color });
-    this.mesh = new THREE.Mesh(this.#geometry, this.#material);
+    this.#mesh = new THREE.Mesh(this.#geometry, this.#material);
 
     this.#scene = scene;
     this.updateMeshPosition();
-    this.#scene.add(this.mesh);
+    this.#scene.add(this.#mesh);
   }
 
   applyGravity(other, G = 6.6743e-11) {
@@ -46,21 +47,19 @@ export class CelestialBody {
   }
 
   updateMeshPosition() {
-    this.mesh.position.set(this.state.position.x, this.state.position.y);
+    this.#mesh.position.set(...this.state.position);
   }
 
   reset() {
-    // Restore state from initial conditions
     this.state.position.copy(this.initialState.position);
     this.state.velocity.copy(this.initialState.velocity);
     this.state.acceleration.set(0, 0);
 
-    // Update mesh position
     this.updateMeshPosition();
   }
 
   dispose() {
-    this.#scene.remove(this.mesh);
+    this.#scene.remove(this.#mesh);
     this.#geometry.dispose();
     this.#material.dispose();
   }

@@ -28,8 +28,6 @@ canvas {
 }
 
 #controls {
-  top: 10px;
-  right: 10px;
   margin-top: 20px;
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -55,7 +53,14 @@ canvas {
   margin-bottom: 10px;
 }
 
+#controls .button-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 #controls button {
+  font-size: 1rem;
   margin: 5px 0;
 }
 
@@ -80,11 +85,15 @@ canvas {
   border: none;
   border-radius: 4px;
   font-size: 0.8rem;
+  padding: 8px 0;
   color: white;
   background-color: #3d3d3d;
   white-space: nowrap;
   text-align: center;
+  cursor: pointer;
+  flex: 1;
 }
+
 #resumeSimulation:hover,
 #restartSimulation:hover {
   background-color: #5e5e5e;

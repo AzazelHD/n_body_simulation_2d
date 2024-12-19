@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Starfield } from "./starfield.js";
 import { CelestialBody } from "./celestialBody.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -25,15 +26,14 @@ const bodies = [
   new CelestialBody(pos3, vel3, 100, "teal", scene),
 ];
 
-let zoom = 1;
-
 // Camera setup
-const aspectRatio = canvas.width / canvas.height;
+const frustum = 1000;
+let aspectRatio = canvas.width / canvas.height;
 const camera = new THREE.OrthographicCamera(
-  (-aspectRatio * 500) / zoom, // Left
-  (aspectRatio * 500) / zoom, // Right
-  500 / zoom, // Top
-  -500 / zoom, // Bottom
+  (-aspectRatio * frustum) >> 1, // Left
+  (aspectRatio * frustum) >> 1, // Right
+  frustum >> 1, // Top
+  -frustum >> 1, // Bottom
   1, // Near
   1000 // Far
 );
@@ -51,11 +51,19 @@ dtValue.textContent = dt;
 stepsInput.value = steps;
 stepsValue.textContent = steps;
 
-let simulationId;
+const starfield = new Starfield(
+  1000,
+  1,
+  Math.max(camera.right - camera.left, camera.top - camera.bottom),
+  scene
+);
+
+let simulationId = 0;
+const xmove = Math.random() * 2 - 1;
+const ymove = Math.random() * 2 - 1;
+
 function simulate(dt, steps = 1, G = 1) {
-  if (paused) return;
-  for (let i = 0; i < steps; i++) {
-    // Apply gravitational forces
+  for (let i = 0; i < (steps | 0); i++) {
     for (let i = 0; i < bodies.length; i++) {
       for (let j = i + 1; j < bodies.length; j++) {
         bodies[i].applyGravity(bodies[j], G);
@@ -63,24 +71,16 @@ function simulate(dt, steps = 1, G = 1) {
       }
     }
 
-    // Update and draw bodies
     bodies.forEach((body) => {
       body.updateVelocity(dt / steps);
       body.updatePosition(dt / steps);
     });
   }
-
-  // camera.position.set(...bodies[0].position, 100);
+  starfield.animate(xmove, ymove, dt * 0.5);
 
   renderer.render(scene, camera);
   simulationId = requestAnimationFrame(() => simulate(dt, steps, G));
 }
-
-// document.body.onkeydown = function (e) {
-//   if (e.key == " " || e.code == "Space" || e.keyCode == 32) {
-//     simulate(dt, steps, G);
-//   }
-// };
 
 document.addEventListener("DOMContentLoaded", () => {
   setupButtons();
@@ -113,11 +113,11 @@ function setupButtons() {
   startButton.addEventListener("click", () => {
     if (paused) {
       paused = false;
-      startButton.textContent = "Pause Simulation";
+      startButton.textContent = "Pause";
       simulate(dt, steps, G);
     } else {
       paused = true;
-      startButton.textContent = "Resume Simulation";
+      startButton.textContent = "Resume";
       cancelAnimationFrame(simulationId);
     }
   });
@@ -128,7 +128,28 @@ function setupButtons() {
     });
     renderer.render(scene, camera);
     paused = true;
-    startButton.textContent = "Resume Simulation";
+    startButton.textContent = "Resume";
     cancelAnimationFrame(simulationId);
   });
 }
+
+window.addEventListener("wheel", (event) => {
+  if (event.deltaY > 0) {
+    camera.zoom = Math.max(0.25, camera.zoom * 0.975);
+  } else {
+    camera.zoom = Math.min(3, camera.zoom * 1.025);
+  }
+  camera.updateProjectionMatrix();
+});
+
+window.addEventListener("resize", () => {
+  aspectRatio = window.innerWidth / window.innerHeight;
+
+  camera.left = -aspectRatio * frustum;
+  camera.right = aspectRatio * frustum;
+  camera.top = frustum;
+  camera.bottom = -frustum;
+
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
