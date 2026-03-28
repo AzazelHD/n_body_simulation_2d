@@ -387,6 +387,11 @@ function setupButtons() {
 }
 
 window.addEventListener("wheel", (event) => {
+  // Don't zoom if scrolling over the controls panel
+  if (event.target.closest("#controls")) {
+    return;
+  }
+
   const maxZoomOut = starField.isDebugMode() ? 0.05 : 0.25;
 
   if (event.deltaY > 0) {
