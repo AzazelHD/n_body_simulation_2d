@@ -32,31 +32,27 @@
           </fieldset>
 
           <fieldset id="bodiesFieldset">
-            <legend>
-              <button type="button" id="toggleBodiesContent" class="collapse-toggle" aria-expanded="false">▼</button>
-              Bodies Configuration
-            </legend>
-            <div id="bodiesContent" class="collapse-content collapsed">
-              <label>
-                Load Preset:
-                <select id="scenarioSelect">
-                  <option value="">Custom</option>
-                  <option value="lagrangeTriangle" selected>Lagrange L4/L5</option>
-                  <option value="orbitingPlanets">Orbiting Planets</option>
-                  <option value="figure8">Figure-8 Orbit</option>
-                  <option value="binary">Binary System</option>
-                  <option value="chaotic">Chaotic Dance</option>
-                </select>
-              </label>
-              <div id="bodiesContainer">
-                <!-- Dynamically populated body cards -->
-              </div>
+            <legend>Bodies Configuration</legend>
+            <label>
+              Load Preset:
+              <select id="scenarioSelect">
+                <option value="">Custom</option>
+                <option value="lagrangeTriangle" selected>Lagrange L4/L5</option>
+                <option value="orbitingPlanets">Orbiting Planets</option>
+                <option value="figure8">Figure-8 Orbit</option>
+                <option value="binary">Binary System</option>
+                <option value="chaotic">Chaotic Dance</option>
+              </select>
+            </label>
+            <div id="bodiesContainer">
+              <!-- Dynamically populated body cards -->
+            </div>
               <div class="button-container">
                 <button type="button" id="addBodyBtn">+ Add Body</button>
                 <button type="button" id="applyChanges">Apply Changes</button>
                 <button type="button" id="resetBodies">Reset to Scenario</button>
               </div>
-            </div>
+
           </fieldset>
         </form>
       </div>

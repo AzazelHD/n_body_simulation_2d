@@ -15,41 +15,44 @@ export function renderBodyCard(bodyConfig, index, canRemove = true) {
   return `
     <div class="body-card" data-index="${index}">
       <div class="card-header">
+        <button type="button" class="card-toggle" aria-expanded="false" aria-label="Toggle body settings">▼</button>
         <h4>Body ${index + 1}</h4>
         <span class="color-indicator" style="background-color: ${bodyConfig.color}"></span>
       </div>
-      <div class="card-inputs">
-        <fieldset class="input-group">
-          <legend>Position & Velocity</legend>
-          <label>
-            Position X:
-            <input class="body-input body-posX" type="number" value="${bodyConfig.posX}" step="10" />
-          </label>
-          <label>
-            Position Y:
-            <input class="body-input body-posY" type="number" value="${bodyConfig.posY}" step="10" />
-          </label>
-          <label>
-            Velocity X:
-            <input class="body-input body-velX" type="number" value="${bodyConfig.velX}" step="0.05" />
-          </label>
-          <label>
-            Velocity Y:
-            <input class="body-input body-velY" type="number" value="${bodyConfig.velY}" step="0.05" />
-          </label>
-        </fieldset>
+      <div class="card-inputs-wrapper collapsed">
+        <div class="card-inputs">
+          <fieldset class="input-group">
+            <legend>Position & Velocity</legend>
+            <label>
+              Position X:
+              <input class="body-input body-posX" type="number" value="${bodyConfig.posX}" step="10" />
+            </label>
+            <label>
+              Position Y:
+              <input class="body-input body-posY" type="number" value="${bodyConfig.posY}" step="10" />
+            </label>
+            <label>
+              Velocity X:
+              <input class="body-input body-velX" type="number" value="${bodyConfig.velX}" step="0.05" />
+            </label>
+            <label>
+              Velocity Y:
+              <input class="body-input body-velY" type="number" value="${bodyConfig.velY}" step="0.05" />
+            </label>
+          </fieldset>
 
-        <fieldset class="input-group">
-          <legend>Properties</legend>
-          <label>
-            Mass:
-            <input class="body-input body-mass" type="number" value="${bodyConfig.mass}" min="1" step="5" />
-          </label>
-          <label>
-            Color:
-            <input class="body-input body-color" type="color" value="${bodyConfig.color}" />
-          </label>
-        </fieldset>
+          <fieldset class="input-group">
+            <legend>Properties</legend>
+            <label>
+              Mass:
+              <input class="body-input body-mass" type="number" value="${bodyConfig.mass}" min="1" step="5" />
+            </label>
+            <label>
+              Color:
+              <input class="body-input body-color" type="color" value="${bodyConfig.color}" />
+            </label>
+          </fieldset>
+        </div>
       </div>
       ${canRemove ? `<button type="button" class="remove-body-btn">Remove Body</button>` : `<button type="button" class="remove-body-btn" disabled>Remove Body (Last)</button>`}
     </div>
@@ -104,6 +107,26 @@ export function attachBodyInputListeners(containerId, pendingConfig, onUpdate) {
       if (index >= 0 && index < pendingConfig.length) {
         pendingConfig.splice(index, 1);
         if (onUpdate) onUpdate();
+      }
+    });
+  });
+
+  // Card toggle buttons
+  container.querySelectorAll(".card-toggle").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const card = e.target.closest(".body-card");
+      const wrapper = card.querySelector(".card-inputs-wrapper");
+      const isCollapsed = wrapper.classList.contains("collapsed");
+
+      if (isCollapsed) {
+        // Expand
+        wrapper.classList.remove("collapsed");
+        btn.setAttribute("aria-expanded", "true");
+      } else {
+        // Collapse
+        wrapper.classList.add("collapsed");
+        btn.setAttribute("aria-expanded", "false");
       }
     });
   });
