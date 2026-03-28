@@ -335,6 +335,9 @@ function setupButtons() {
     // Reinitialize bodies from active config
     initializeBodies(activeBodiesConfig);
 
+    // Ensure inputs are enabled since we're paused
+    BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
+
     renderer.render(scene, camera);
     paused = true;
     startButton.textContent = "Resume";
