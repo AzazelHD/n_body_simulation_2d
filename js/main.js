@@ -1,6 +1,8 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 import { Starfield, StarfieldCell } from "./starfield.js";
 import { CelestialBody } from "./celestialBody.js";
+import { cloneScenarioBodies } from "./scenarios.js";
+import * as BodyEditor from "./bodyEditor.js";
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -9,36 +11,51 @@ const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-// Orbiting Planets
-// const pos1 = new THREE.Vector2(0, 0);
-// const pos2 = new THREE.Vector2(0, -200);
-// const pos3 = new THREE.Vector2(0, 200);
-// const vel1 = new THREE.Vector2(0, 0);
-// const vel2 = new THREE.Vector2(-2, 0);
-// const vel3 = new THREE.Vector2(2, 0);
-// const bodies = [
-//   new CelestialBody(pos1, vel1, 1000, "white", scene),
-//   new CelestialBody(pos2, vel2, 100, "red", scene),
-//   new CelestialBody(pos3, vel3, 100, "teal", scene),
-// ];
+// Bodies configuration and instances
+let bodiesConfig = []; // Array of {posX, posY, velX, velY, mass, color}
+let bodies = []; // Array of CelestialBody instances
+let activeBodiesConfig = []; // Currently active scenario
+let pendingBodiesConfig = []; // Being edited in UI (not yet applied)
 
-// Figure-8 orbit
-// Lagrange L4/L5 Triangle - Very Stable
-const pos1 = new THREE.Vector2(0, 0);
-const pos2 = new THREE.Vector2(200, 0);
-const pos3 = new THREE.Vector2(100, 100 * Math.sqrt(3));
+/**
+ * Destroy all bodies from the scene
+ */
+function destroyBodies() {
+  bodies.forEach((body) => {
+    body.dispose();
+  });
+  bodies = [];
+}
 
-const speed = 0.1;
+/**
+ * Initialize bodies from configuration
+ * @param {Array} config - Array of body configurations
+ */
+function initializeBodies(config) {
+  destroyBodies();
+  bodiesConfig = config.map((c) => ({ ...c })); // Deep copy
+  activeBodiesConfig = config.map((c) => ({ ...c })); // Store active config
+  pendingBodiesConfig = config.map((c) => ({ ...c })); // Update pending config
 
-const vel1 = pos2.clone().sub(pos1).normalize().multiplyScalar(speed);
-const vel2 = pos3.clone().sub(pos2).normalize().multiplyScalar(speed);
-const vel3 = pos1.clone().sub(pos3).normalize().multiplyScalar(speed);
+  // Create CelestialBody instances from config
+  bodies = bodiesConfig.map((bodyConfig) => {
+    const pos = new THREE.Vector2(bodyConfig.posX, bodyConfig.posY);
+    const vel = new THREE.Vector2(bodyConfig.velX, bodyConfig.velY);
+    return new CelestialBody(pos, vel, bodyConfig.mass, bodyConfig.color, scene);
+  });
 
-const bodies = [
-  new CelestialBody(pos1, vel1, 10, "white", scene), // Heavy central body
-  new CelestialBody(pos2, vel2, 10, "red", scene), // Light body
-  new CelestialBody(pos3, vel3, 10, "teal", scene), // Light body
-];
+  // Reset camera to body[0] if bodies exist
+  if (bodies.length > 0) {
+    camera.position.set(bodiesConfig[0].posX, bodiesConfig[0].posY, 100);
+  }
+
+  // Render body cards in UI
+  BodyEditor.renderAndAttachListeners("bodiesContainer", pendingBodiesConfig, renderBodyCards);
+  BodyEditor.setBodyInputsDisabled("bodiesContainer", paused === false);
+}
+
+// Load default scenario (Lagrange Triangle)
+initializeBodies(cloneScenarioBodies("lagrangeTriangle"));
 
 // Camera setup
 const frustum = 1000;
@@ -51,7 +68,7 @@ const camera = new THREE.OrthographicCamera(
   1,
   1000,
 );
-camera.position.set(...pos1, 100);
+// Camera will be positioned by initializeBodies()
 
 // Simulation parameters
 let paused = false;
@@ -109,6 +126,83 @@ function updateIntegratorLabel(value) {
     3: "RK4",
   };
   integratorValue.textContent = labels[value] || "Unknown";
+}
+
+function renderBodyCards() {
+  BodyEditor.renderAndAttachListeners("bodiesContainer", pendingBodiesConfig, renderBodyCards);
+  BodyEditor.setBodyInputsDisabled("bodiesContainer", !paused);
+}
+
+function setupBodyEditor() {
+  const scenarioSelect = $("#scenarioSelect");
+  const addBodyBtn = $("#addBodyBtn");
+  const applyChangesBtn = $("#applyChanges");
+  const resetBodiesBtn = $("#resetBodies");
+
+  // Scenario dropdown handler
+  scenarioSelect.addEventListener("change", (e) => {
+    if (e.target.value === "") return; // Custom selected, do nothing
+
+    const scenarioKey = e.target.value;
+    const scenarioConfig = cloneScenarioBodies(scenarioKey);
+    if (scenarioConfig.length > 0) {
+      pendingBodiesConfig = scenarioConfig;
+      renderBodyCards();
+      BodyEditor.clearError();
+    }
+  });
+
+  // Add Body button
+  addBodyBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const newBody = {
+      posX: 0,
+      posY: 0,
+      velX: 0,
+      velY: 0,
+      mass: 10,
+      color: "#ffffff",
+    };
+    pendingBodiesConfig.push(newBody);
+    renderBodyCards();
+    BodyEditor.clearError();
+  });
+
+  // Apply Changes button
+  applyChangesBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // Validate
+    const validation = BodyEditor.validateBodiesConfig(pendingBodiesConfig);
+    if (!validation.valid) {
+      BodyEditor.showError(validation.error);
+      return;
+    }
+
+    // Apply the pending changes
+    initializeBodies(pendingBodiesConfig);
+
+    // Pause simulation and update UI
+    paused = true;
+    const startButton = $("#resumeSimulation");
+    startButton.textContent = "Resume";
+    cancelAnimationFrame(simulationId);
+
+    // Disable inputs since we're paused but will re-enable
+    BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
+    BodyEditor.clearError();
+
+    // Render one frame to show new configuration
+    renderer.render(scene, camera);
+  });
+
+  // Reset to Scenario button
+  resetBodiesBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    pendingBodiesConfig = activeBodiesConfig.map((c) => ({ ...c }));
+    renderBodyCards();
+    BodyEditor.clearError();
+  });
 }
 
 function animate(dt, integrator = 2, G = 1) {
@@ -180,6 +274,7 @@ function animate(dt, integrator = 2, G = 1) {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupButtons();
+  setupBodyEditor();
   animate(dt, integrator, G);
 });
 
@@ -210,10 +305,12 @@ function setupButtons() {
     if (paused) {
       paused = false;
       startButton.textContent = "Pause";
+      BodyEditor.setBodyInputsDisabled("bodiesContainer", true);
       animate(dt, integrator, G);
     } else {
       paused = true;
       startButton.textContent = "Resume";
+      BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
       cancelAnimationFrame(simulationId);
     }
   });
@@ -224,11 +321,8 @@ function setupButtons() {
     integratorInput.value = integrator = 2;
     updateIntegratorLabel(integrator);
 
-    bodies.forEach((body) => {
-      body.reset();
-    });
-
-    camera.position.set(...bodies[0].state.position, 100);
+    // Reinitialize bodies from active config
+    initializeBodies(activeBodiesConfig);
 
     renderer.render(scene, camera);
     paused = true;
