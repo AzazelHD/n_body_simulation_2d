@@ -67,6 +67,21 @@ function loadInitialScenario() {
   }
 }
 
+/**
+ * Disable/enable body editor controls based on simulation paused state
+ * When running (paused = false), disable editing controls
+ * When paused (paused = true), enable editing controls
+ */
+function setEditorControlsDisabled(disabled) {
+  const scenarioSelect = $("#scenarioSelect");
+  const addBodyBtn = $("#addBodyBtn");
+  const applyChangesBtn = $("#applyChanges");
+  
+  if (scenarioSelect) scenarioSelect.disabled = disabled;
+  if (addBodyBtn) addBodyBtn.disabled = disabled;
+  if (applyChangesBtn) applyChangesBtn.disabled = disabled;
+}
+
 // Camera setup
 const frustum = 1000;
 let aspectRatio = canvas.width / canvas.height;
@@ -198,8 +213,9 @@ function setupBodyEditor() {
     startButton.textContent = "Resume";
     cancelAnimationFrame(simulationId);
 
-    // Disable inputs since we're paused but will re-enable
+    // Disable inputs and controls since we're paused but will re-enable
     BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
+    setEditorControlsDisabled(false);
     BodyEditor.clearError();
 
     // Render one frame to show new configuration
@@ -317,11 +333,13 @@ function setupButtons() {
       paused = false;
       startButton.textContent = "Pause";
       BodyEditor.setBodyInputsDisabled("bodiesContainer", true);
+      setEditorControlsDisabled(true);
       animate(dt, integrator, G);
     } else {
       paused = true;
       startButton.textContent = "Resume";
       BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
+      setEditorControlsDisabled(false);
       cancelAnimationFrame(simulationId);
     }
   });
@@ -335,8 +353,9 @@ function setupButtons() {
     // Reinitialize bodies from active config
     initializeBodies(activeBodiesConfig);
 
-    // Ensure inputs are enabled since we're paused
+    // Ensure inputs and controls are enabled since we're paused
     BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
+    setEditorControlsDisabled(false);
 
     renderer.render(scene, camera);
     paused = true;
