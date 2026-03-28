@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -21,9 +21,9 @@
               <output id="dtValue"></output>
             </label>
             <label>
-              Accuracy:
-              <input type="range" id="stepsInput" min="1" max="20" step="1" />
-              <output id="stepsValue"></output>
+              Integrator:
+              <input type="range" id="integratorInput" min="1" max="3" step="1" value="2" />
+              <output id="integratorValue">Verlet</output>
             </label>
             <div class="button-container">
               <button type="button" id="resumeSimulation">Pause</button>
