@@ -49,13 +49,23 @@ function initializeBodies(config) {
     camera.position.set(bodiesConfig[0].posX, bodiesConfig[0].posY, 100);
   }
 
-  // Render body cards in UI
-  BodyEditor.renderAndAttachListeners("bodiesContainer", pendingBodiesConfig, renderBodyCards);
-  BodyEditor.setBodyInputsDisabled("bodiesContainer", paused === false);
+  // Render body cards in UI (only if DOM is ready)
+  const container = document.getElementById("bodiesContainer");
+  if (container) {
+    BodyEditor.renderAndAttachListeners("bodiesContainer", pendingBodiesConfig, renderBodyCards);
+    BodyEditor.setBodyInputsDisabled("bodiesContainer", paused === false);
+  }
 }
 
-// Load default scenario (Lagrange Triangle)
-initializeBodies(cloneScenarioBodies("lagrangeTriangle"));
+// Load default scenario (Lagrange Triangle) - will be called in DOMContentLoaded
+let initialScenarioLoaded = false;
+
+function loadInitialScenario() {
+  if (!initialScenarioLoaded) {
+    initializeBodies(cloneScenarioBodies("lagrangeTriangle"));
+    initialScenarioLoaded = true;
+  }
+}
 
 // Camera setup
 const frustum = 1000;
@@ -273,6 +283,7 @@ function animate(dt, integrator = 2, G = 1) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  loadInitialScenario();
   setupButtons();
   setupBodyEditor();
   animate(dt, integrator, G);
