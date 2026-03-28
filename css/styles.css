@@ -281,3 +281,48 @@ button:disabled {
   font-size: 0.9rem;
   text-align: center;
 }
+
+.error-message.show {
+  display: block;
+}
+
+/* Collapse/Expand toggle button in legend */
+.collapse-toggle {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-right: 8px;
+  padding: 0;
+  transition: transform 0.3s ease;
+  display: inline-block;
+  user-select: none;
+}
+
+.collapse-toggle:hover {
+  opacity: 0.7;
+}
+
+.collapse-toggle[aria-expanded="true"] {
+  transform: rotate(0deg);
+}
+
+.collapse-toggle[aria-expanded="false"] {
+  transform: rotate(-90deg);
+}
+
+/* Collapsible content container */
+.collapse-content {
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  opacity: 1;
+  padding: 10px 0;
+}
+
+.collapse-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}

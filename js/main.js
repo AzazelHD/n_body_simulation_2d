@@ -76,7 +76,7 @@ function setEditorControlsDisabled(disabled) {
   const scenarioSelect = $("#scenarioSelect");
   const addBodyBtn = $("#addBodyBtn");
   const applyChangesBtn = $("#applyChanges");
-  
+
   if (scenarioSelect) scenarioSelect.disabled = disabled;
   if (addBodyBtn) addBodyBtn.disabled = disabled;
   if (applyChangesBtn) applyChangesBtn.disabled = disabled;
@@ -302,6 +302,28 @@ document.addEventListener("DOMContentLoaded", () => {
   loadInitialScenario();
   setupButtons();
   setupBodyEditor();
+
+  // Setup bodies configuration collapse/expand
+  const toggleBodiesBtn = $("#toggleBodiesContent");
+  const bodiesContent = $("#bodiesContent");
+
+  if (toggleBodiesBtn && bodiesContent) {
+    toggleBodiesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const isCollapsed = bodiesContent.classList.contains("collapsed");
+
+      if (isCollapsed) {
+        // Expand
+        bodiesContent.classList.remove("collapsed");
+        toggleBodiesBtn.setAttribute("aria-expanded", "true");
+      } else {
+        // Collapse
+        bodiesContent.classList.add("collapsed");
+        toggleBodiesBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
   animate(dt, integrator, G);
 });
 
