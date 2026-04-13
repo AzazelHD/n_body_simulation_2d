@@ -326,9 +326,6 @@ export class Starfield {
   resize(camera) {
     this.camera = camera;
 
-    const oldCenterX = this.currentCellX;
-    const oldCenterY = this.currentCellY;
-
     this.#calculateCellSize();
 
     // Update all cells with new dimensions

@@ -11,15 +11,17 @@
  * @returns {string} HTML string
  */
 export function renderBodyCard(bodyConfig, index, canRemove = true) {
-  const colorRGB = hexToRgb(bodyConfig.color);
+  const hue = hexToHue(bodyConfig.color);
+
   return `
-    <div class="body-card" data-index="${index}">
-      <div class="card-header">
+    <article class="body-card" data-index="${index}">
+      <header class="card-header">
         <button type="button" class="card-toggle" aria-expanded="false" aria-label="Toggle body settings">▼</button>
-        <h4>Body ${index + 1}</h4>
         <span class="color-indicator" style="background-color: ${bodyConfig.color}"></span>
-      </div>
-      <div class="card-inputs-wrapper collapsed">
+        <h4>Body ${index + 1}</h4>
+        ${canRemove ? `<button type="button" class="remove-body-btn-x" aria-label="Remove body">×</button>` : `<button type="button" class="remove-body-btn-x" disabled aria-label="Cannot remove last body">×</button>`}
+      </header>
+      <section class="card-inputs-wrapper collapsed">
         <div class="card-inputs">
           <fieldset class="input-group">
             <legend>Position & Velocity</legend>
@@ -49,13 +51,12 @@ export function renderBodyCard(bodyConfig, index, canRemove = true) {
             </label>
             <label>
               Color:
-              <input class="body-input body-color" type="color" value="${bodyConfig.color}" />
+              <input class="body-input body-hue" type="range" min="0" max="360" step="1" value="${hue}" style="--hue: ${hue}; --hue-progress: ${(hue / 360) * 100}%;" />
             </label>
           </fieldset>
         </div>
-      </div>
-      ${canRemove ? `<button type="button" class="remove-body-btn">Remove Body</button>` : `<button type="button" class="remove-body-btn" disabled>Remove Body (Last)</button>`}
-    </div>
+      </section>
+    </article>
   `;
 }
 
@@ -89,14 +90,27 @@ export function attachBodyInputListeners(containerId, pendingConfig, onUpdate) {
       const configKey = fieldName.replace("body-", ""); // e.g., 'mass'
 
       if (index >= 0 && index < pendingConfig.length) {
-        pendingConfig[index][configKey] = parseFloat(e.target.value) || 0;
-        if (onUpdate) onUpdate();
+        if (configKey === "hue") {
+          const nextHue = parseInt(e.target.value, 10) || 0;
+          pendingConfig[index].color = hueToHex(nextHue);
+          e.target.style.setProperty("--hue", `${nextHue}`);
+          e.target.style.setProperty("--hue-progress", `${(nextHue / 360) * 100}%`);
+
+          const indicator = card.querySelector(".color-indicator");
+          if (indicator) {
+            indicator.style.backgroundColor = pendingConfig[index].color;
+          }
+        } else {
+          pendingConfig[index][configKey] = parseFloat(e.target.value) || 0;
+        }
+
+        // Re-render only for structural changes (remove/add), otherwise sliders collapse while dragging.
       }
     });
   });
 
-  // Remove body buttons
-  container.querySelectorAll(".remove-body-btn").forEach((btn) => {
+  // Remove body buttons (X icons)
+  container.querySelectorAll(".remove-body-btn-x").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       if (btn.disabled) return;
@@ -111,12 +125,12 @@ export function attachBodyInputListeners(containerId, pendingConfig, onUpdate) {
     });
   });
 
-  // Card toggle buttons
-  container.querySelectorAll(".card-toggle").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const card = e.target.closest(".body-card");
+  // Card toggle: click anywhere on header to expand/collapse
+  container.querySelectorAll(".card-header").forEach((header) => {
+    header.addEventListener("click", (e) => {
+      const card = header.closest(".body-card");
       const wrapper = card.querySelector(".card-inputs-wrapper");
+      const btn = card.querySelector(".card-toggle");
       const isCollapsed = wrapper.classList.contains("collapsed");
 
       if (isCollapsed) {
@@ -149,7 +163,11 @@ export function updateBodyCardsDisplay(containerId, bodiesConfig) {
       card.querySelector(".body-velX").value = config.velX;
       card.querySelector(".body-velY").value = config.velY;
       card.querySelector(".body-mass").value = config.mass;
-      card.querySelector(".body-color").value = config.color;
+      const hueInput = card.querySelector(".body-hue");
+      const hue = hexToHue(config.color);
+      hueInput.value = hue;
+      hueInput.style.setProperty("--hue", `${hue}`);
+      hueInput.style.setProperty("--hue-progress", `${(hue / 360) * 100}%`);
       card.querySelector(".color-indicator").style.backgroundColor = config.color;
     }
   });
@@ -164,11 +182,12 @@ export function setBodyInputsDisabled(containerId, disabled) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  container.querySelectorAll(".body-input").forEach((input) => {
+  // Keep hue sliders editable while running so body colors can be adjusted live.
+  container.querySelectorAll(".body-input:not(.body-hue)").forEach((input) => {
     input.disabled = disabled;
   });
 
-  container.querySelectorAll(".remove-body-btn").forEach((btn) => {
+  container.querySelectorAll(".remove-body-btn-x").forEach((btn) => {
     // Only truly disable if not the last body
     const isLastBody = !container.querySelector(".body-card:nth-child(n+2)");
     btn.disabled = disabled || isLastBody;
@@ -189,20 +208,71 @@ export function renderAndAttachListeners(containerId, bodiesConfig, onUpdate) {
   attachBodyInputListeners(containerId, bodiesConfig, onUpdate);
 }
 
-/**
- * Convert hex color to RGB
- * @param {string} hex - Hex color string
- * @returns {Object} RGB object or null
- */
-function hexToRgb(hex) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
-    : null;
+function hueToHex(hue) {
+  const normalized = ((hue % 360) + 360) % 360;
+  const c = 1;
+  const x = 1 - Math.abs(((normalized / 60) % 2) - 1);
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (normalized < 60) {
+    r = c;
+    g = x;
+  } else if (normalized < 120) {
+    r = x;
+    g = c;
+  } else if (normalized < 180) {
+    g = c;
+    b = x;
+  } else if (normalized < 240) {
+    g = x;
+    b = c;
+  } else if (normalized < 300) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+
+  const toHex = (value) =>
+    Math.round((value * 0.75 + 0.15) * 255)
+      .toString(16)
+      .padStart(2, "0");
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function hexToHue(hex) {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!match) return 0;
+
+  const r = parseInt(match[1], 16) / 255;
+  const g = parseInt(match[2], 16) / 255;
+  const b = parseInt(match[3], 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+
+  if (delta === 0) return 0;
+
+  let hue;
+  if (max === r) {
+    hue = ((g - b) / delta) % 6;
+  } else if (max === g) {
+    hue = (b - r) / delta + 2;
+  } else {
+    hue = (r - g) / delta + 4;
+  }
+
+  return Math.round((hue * 60 + 360) % 360);
+}
+
+export function getRandomBodyColor() {
+  return hueToHex(Math.floor(Math.random() * 360));
 }
 
 /**

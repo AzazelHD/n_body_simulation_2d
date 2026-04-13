@@ -32,7 +32,7 @@ export class CelestialBody {
   #createMesh(mass, color) {
     const radius = 2 * Math.sqrt(mass);
     this.#geometry = new THREE.CircleGeometry(radius, CelestialBody.CIRCLE_SEGMENTS);
-    this.#material = new THREE.MeshBasicMaterial({ color });
+    this.#material = new THREE.MeshBasicMaterial({ color, transparent: false, opacity: 1 });
     this.#mesh = new THREE.Mesh(this.#geometry, this.#material);
   }
 
@@ -205,6 +205,11 @@ export class CelestialBody {
   // Public wrapper for external use (needed by main.js for Verlet)
   calculateAccelerationFromState(allBodies, bodiesState, G) {
     return this.#calculateAccelerationFromState(allBodies, bodiesState, G);
+  }
+
+  setColor(color) {
+    this.initialState.color = color;
+    this.#material.color.set(color);
   }
 
   reset() {

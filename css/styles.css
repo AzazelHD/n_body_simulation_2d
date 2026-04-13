@@ -33,12 +33,19 @@ canvas {
   border-radius: 8px;
   padding: 10px;
   z-index: 1;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  max-width: 280px;
 }
 
 #controls fieldset {
   margin: 0;
   border: 1px solid rgb(161, 161, 161);
   border-radius: 8px;
+}
+
+#controls > fieldset:first-of-type {
+  margin-bottom: 10px;
 }
 
 #controls legend {
@@ -51,6 +58,92 @@ canvas {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
+}
+
+/* Simulation controls inline layout */
+.sim-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.sim-label {
+  min-width: 70px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sim-slider {
+  flex: 1;
+  height: 20px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sim-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.sim-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.sim-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.sim-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: #7eb5ff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.sim-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: #7eb5ff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.sim-slider:hover::-webkit-slider-thumb,
+.sim-slider:focus-visible::-webkit-slider-thumb,
+.sim-slider:hover::-moz-range-thumb,
+.sim-slider:focus-visible::-moz-range-thumb {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 0 14px rgba(126, 181, 255, 0.7);
+}
+
+.sim-value {
+  color: #aaa;
+  font-size: 0.85rem;
+  min-width: 35px;
+  text-align: right;
 }
 
 #controls .button-container {
@@ -101,9 +194,9 @@ canvas {
 
 /* Bodies Configuration Styles */
 #bodiesFieldset {
-  max-height: 600px;
+  max-height: calc(100vh - 300px);
   overflow-y: auto;
-  margin-top: 15px;
+  margin-top: 0;
 }
 
 #bodiesFieldset label {
@@ -113,20 +206,44 @@ canvas {
   font-size: 0.9rem;
 }
 
-#bodiesFieldset label select {
-  margin-left: 8px;
-  padding: 4px;
+.preset-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+}
+
+.preset-label {
+  margin: 0;
+  color: #fff;
+  font-weight: 500;
+  font-family: Arial, sans-serif;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  height: 28px;
+}
+
+.preset-select {
+  margin: 0;
+  padding: 4px 6px;
   background-color: #2a2a2a;
   color: white;
   border: 1px solid #555;
   border-radius: 4px;
   flex: 1;
   max-width: 150px;
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+  height: 28px;
+  line-height: 1;
 }
 
 #bodiesContainer {
   margin: 15px 0;
-  max-height: 400px;
+  max-height: calc(100vh - 520px);
   overflow-y: auto;
   padding-right: 5px;
 }
@@ -135,8 +252,8 @@ canvas {
   background-color: rgba(50, 50, 50, 0.8);
   border: 1px solid #555;
   border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: 4px;
+  margin-bottom: 4px;
   border-left: 4px solid #4a9eff;
 }
 
@@ -144,14 +261,22 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  gap: 10px;
+  margin-bottom: 3px;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 0;
 }
 
 .card-header h4 {
   margin: 0;
-  font-size: 1rem;
+  padding: 0;
+  font-size: 0.9rem;
   color: #fff;
+  flex: 1;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  height: 20px;
 }
 
 .card-toggle {
@@ -180,26 +305,30 @@ canvas {
 }
 
 .color-indicator {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
   border: 1px solid #888;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .card-inputs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
 .card-inputs-wrapper {
   max-height: 1000px;
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.3s ease,
+    padding 0.3s ease;
   opacity: 1;
-  padding: 0 0 10px 0;
+  padding: 0 0 4px 0;
 }
 
 .card-inputs-wrapper.collapsed {
@@ -212,7 +341,7 @@ canvas {
   flex: 1;
   min-width: 150px;
   margin: 0;
-  padding: 8px;
+  padding: 6px;
   background-color: rgba(30, 30, 30, 0.5);
   border: 1px solid #444;
   border-radius: 4px;
@@ -227,7 +356,7 @@ canvas {
 .body-input {
   width: 100%;
   padding: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   background-color: #2a2a2a;
   color: #fff;
   border: 1px solid #555;
@@ -248,29 +377,119 @@ canvas {
   cursor: pointer;
 }
 
-.remove-body-btn {
-  width: 100%;
-  padding: 6px;
+.body-input.body-hue {
+  --hue: 0;
+  --hue-progress: 0%;
+  padding: 0;
+  height: 18px;
+  border: none;
+  border-radius: 999px;
+  appearance: none;
+  background:
+    linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.35) 0,
+      rgba(255, 255, 255, 0.35) var(--hue-progress),
+      rgba(255, 255, 255, 0.1) var(--hue-progress),
+      rgba(255, 255, 255, 0.1) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 0, 0, 0.45) 0%,
+      rgba(255, 255, 0, 0.45) 17%,
+      rgba(0, 255, 0, 0.45) 33%,
+      rgba(0, 255, 255, 0.45) 50%,
+      rgba(0, 0, 255, 0.45) 67%,
+      rgba(255, 0, 255, 0.45) 83%,
+      rgba(255, 0, 0, 0.45) 100%
+    );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.body-input.body-hue::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.body-input.body-hue::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+}
+
+.body-input.body-hue::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -5px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: hsl(var(--hue) 90% 55%);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 0 14px hsla(var(--hue) 95% 60% / 0.8);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.body-input.body-hue::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: hsl(var(--hue) 90% 55%);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 0 14px hsla(var(--hue) 95% 60% / 0.8);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.body-input.body-hue:hover::-webkit-slider-thumb,
+.body-input.body-hue:focus-visible::-webkit-slider-thumb,
+.body-input.body-hue:hover::-moz-range-thumb,
+.body-input.body-hue:focus-visible::-moz-range-thumb {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 0 18px hsla(var(--hue) 95% 60% / 0.95);
+}
+
+.remove-body-btn-x {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0;
   background-color: #d9534f;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: 3px;
+  font-size: 1rem;
+  line-height: 1;
   cursor: pointer;
-  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
 }
 
-.remove-body-btn:hover:not(:disabled) {
+.remove-body-btn-x:hover:not(:disabled) {
   background-color: #c9302c;
 }
 
-.remove-body-btn:disabled {
+.remove-body-btn-x:disabled {
   background-color: #555;
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 #addBodyBtn,
-#applyChanges,
 #resetBodies {
   border: none;
   border-radius: 4px;
@@ -287,14 +506,6 @@ canvas {
 
 #addBodyBtn:hover:not(:disabled) {
   background-color: #4cae4c;
-}
-
-#applyChanges {
-  background-color: #0275d8;
-}
-
-#applyChanges:hover:not(:disabled) {
-  background-color: #0056b3;
 }
 
 #resetBodies {
@@ -320,8 +531,4 @@ button:disabled {
   margin-bottom: 10px;
   font-size: 0.9rem;
   text-align: center;
-}
-
-.error-message.show {
-  display: block;
 }

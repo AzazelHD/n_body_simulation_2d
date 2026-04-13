@@ -10,21 +10,37 @@
   <body>
     <main>
       <canvas id="canvas"></canvas>
-      <div id="controlsContainer">
+      <aside id="controlsContainer">
         <button id="toggleUI">Show Controls</button>
         <form id="controls" hidden>
           <fieldset>
             <legend>Simulation Options</legend>
-            <label>
-              Speed:
-              <input type="range" id="dtInput" min="0.1" max="3" step="0.01" />
-              <output id="dtValue"></output>
-            </label>
-            <label>
-              Integrator:
-              <input type="range" id="integratorInput" min="1" max="3" step="1" value="2" />
-              <output id="integratorValue">Verlet</output>
-            </label>
+            <div class="sim-control">
+              <span class="sim-label">Speed:</span>
+              <input
+                type="range"
+                id="dtInput"
+                min="1"
+                max="10"
+                step="0.1"
+                value="3"
+                class="sim-slider"
+              />
+              <output id="dtValue" class="sim-value"></output>
+            </div>
+            <div class="sim-control">
+              <span class="sim-label">Integrator:</span>
+              <input
+                type="range"
+                id="integratorInput"
+                min="1"
+                max="3"
+                step="1"
+                value="2"
+                class="sim-slider"
+              />
+              <output id="integratorValue" class="sim-value">Verlet</output>
+            </div>
             <div class="button-container">
               <button type="button" id="resumeSimulation">Pause</button>
               <button type="button" id="restartSimulation">Restart</button>
@@ -33,29 +49,22 @@
 
           <fieldset id="bodiesFieldset">
             <legend>Bodies Configuration</legend>
-            <label>
-              Load Preset:
-              <select id="scenarioSelect">
+            <div class="preset-label-row">
+              <span class="preset-label">Load Preset:</span>
+              <select id="scenarioSelect" class="preset-select">
                 <option value="">Custom</option>
-                <option value="lagrangeTriangle" selected>Lagrange L4/L5</option>
-                <option value="orbitingPlanets">Orbiting Planets</option>
-                <option value="figure8">Figure-8 Orbit</option>
-                <option value="binary">Binary System</option>
-                <option value="chaotic">Chaotic Dance</option>
               </select>
-            </label>
-            <div id="bodiesContainer">
-              <!-- Dynamically populated body cards -->
             </div>
-              <div class="button-container">
-                <button type="button" id="addBodyBtn">+ Add Body</button>
-                <button type="button" id="applyChanges">Apply Changes</button>
-                <button type="button" id="resetBodies">Reset to Scenario</button>
-              </div>
-
+            <section id="bodiesContainer">
+              <!-- Dynamically populated body cards -->
+            </section>
+            <div class="button-container">
+              <button type="button" id="addBodyBtn">+ Add Body</button>
+              <button type="button" id="resetBodies">Reset to Scenario</button>
+            </div>
           </fieldset>
         </form>
-      </div>
+      </aside>
     </main>
 
     <script>
