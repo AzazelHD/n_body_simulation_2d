@@ -4,6 +4,7 @@
  */
 
 import { getCircularOrbitVelocity } from "./physicsConfig.js";
+import { ScenarioId, CameraMode } from "./enums.js";
 
 const TRIANGLE_SIDE_LENGTH = 200;
 const CHOREOGRAPHY_POSITION_SCALE = 120;
@@ -147,7 +148,7 @@ function createIsoscelesCollinearChoreography(vx, vy, options = {}) {
 }
 
 export const SCENARIOS = {
-  longLivedLagrange: {
+  [ScenarioId.LONG_LIVED_LAGRANGE]: {
     name: "Long-Lived Lagrange (L4/L5)",
     description:
       "Dominant primary with two light companions in near-L4/L5-like orbits for long-lived stability.",
@@ -222,7 +223,7 @@ export const SCENARIOS = {
     })(),
   },
 
-  lagrangeTriangle: {
+  [ScenarioId.LAGRANGE_TRIANGLE]: {
     name: "Lagrange L4/L5 Triangle",
     description: "Very stable triangular configuration. All bodies have equal mass.",
     bodies: (() => {
@@ -262,7 +263,7 @@ export const SCENARIOS = {
     })(),
   },
 
-  pulsatingTriangle: {
+  [ScenarioId.PULSATING_TRIANGLE]: {
     name: "Pulsating Triangle",
     description:
       "Three equal bodies oscillating in and out, forming a breathing equilateral triangle.",
@@ -306,7 +307,7 @@ export const SCENARIOS = {
     })(),
   },
 
-  orbitingPlanets: {
+  [ScenarioId.ORBITING_PLANETS]: {
     name: "Orbiting Planets",
     description: "Heavy central body with two light planets orbiting.",
     bodies: (() => {
@@ -342,7 +343,7 @@ export const SCENARIOS = {
     })(),
   },
 
-  centralGiantSystem: {
+  [ScenarioId.CENTRAL_GIANT_SYSTEM]: {
     name: "Central Giant System",
     description: "A massive center body with lighter planets in near-circular stable orbits.",
     bodies: (() => {
@@ -366,11 +367,11 @@ export const SCENARIOS = {
     })(),
   },
 
-  figure8: {
+  [ScenarioId.FIGURE_8]: {
     name: "Figure-8 Orbit",
     description:
       "Three equal masses tracing the classic figure-8 choreography in the center-of-mass frame.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: scaleNormalizedScenarioBodies([
       {
         posX: 0.97000436,
@@ -396,59 +397,59 @@ export const SCENARIOS = {
     ]),
   },
 
-  butterflyI: {
+  [ScenarioId.BUTTERFLY_I]: {
     name: "Butterfly I (Choreography)",
     description:
       "Popular equal-mass periodic choreography from the three-body literature (isosceles-collinear form).",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createIsoscelesCollinearChoreography(0.30689, 0.12551),
   },
 
-  butterflyII: {
+  [ScenarioId.BUTTERFLY_II]: {
     name: "Butterfly II (Choreography)",
     description:
       "A second butterfly-family periodic choreography using symmetric collinear initial positions.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createIsoscelesCollinearChoreography(0.39295, 0.09758),
   },
 
-  bumblebee: {
+  [ScenarioId.BUMBLEBEE]: {
     name: "Bumblebee (Choreography)",
     description:
       "Bumblebee-class equal-mass periodic choreography; symmetric initial state with zero net momentum.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createIsoscelesCollinearChoreography(0.18428, 0.58719),
   },
 
-  mothI: {
+  [ScenarioId.MOTH_I]: {
     name: "Moth I (Choreography)",
     description:
       "Moth-family periodic orbit with equal masses and standard symmetric collinear setup.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createIsoscelesCollinearChoreography(0.46444, 0.39606),
   },
 
-  dragonfly: {
+  [ScenarioId.DRAGONFLY]: {
     name: "Dragonfly (Choreography)",
     description:
       "Dragonfly-family periodic choreography from the equal-mass zero-angular-momentum catalog.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createIsoscelesCollinearChoreography(0.08058, 0.58884),
   },
 
-  binary: {
+  [ScenarioId.BINARY]: {
     name: "Binary System",
     description:
       "Two equal primaries orbiting their barycenter with a lighter third body farther out.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createBinarySystemBodies(),
   },
 
-  chaotic: {
+  [ScenarioId.CHAOTIC]: {
     name: "Chaotic Dance",
     description:
       "A balanced three-body setup with enough asymmetry to stay chaotic without immediately flying apart.",
-    cameraMode: "centerOfMass",
+    cameraMode: CameraMode.CENTER_OF_MASS,
     bodies: createChaoticDanceBodies(),
   },
 };

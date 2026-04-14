@@ -29,6 +29,10 @@ export class CelestialBody {
     this.#scene.add(this.#mesh);
   }
 
+  get mass() {
+    return this.initialState.mass;
+  }
+
   #createMesh(mass, color) {
     const radius = 2 * Math.sqrt(mass);
     this.#geometry = new THREE.CircleGeometry(radius, CelestialBody.CIRCLE_SEGMENTS);

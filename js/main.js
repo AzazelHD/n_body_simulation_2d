@@ -3,6 +3,7 @@ import { Starfield, StarfieldCell } from "./starfield.js";
 import { CelestialBody } from "./celestialBody.js";
 import { SCENARIOS, cloneScenarioBodies } from "./scenarios.js";
 import { PHYSICS_CONFIG } from "./physicsConfig.js";
+import { ScenarioId, CameraMode, Integrator } from "./enums.js";
 import * as BodyEditor from "./bodyEditor.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -19,7 +20,7 @@ let activeBodiesConfig = []; // Currently active scenario
 let pendingBodiesConfig = []; // Being edited in UI (not yet applied)
 let velocityArrows = [];
 let bodyTrails = [];
-let activeCameraMode = "firstBody";
+let activeCameraMode = CameraMode.FIRST_BODY;
 
 const TRAIL_MAX_POINTS = 100;
 const TRAIL_OPACITY = 0.35;
@@ -65,7 +66,7 @@ function getCameraAnchor(config, cameraMode = activeCameraMode) {
     return { x: 0, y: 0 };
   }
 
-  if (cameraMode === "centerOfMass") {
+  if (cameraMode === CameraMode.CENTER_OF_MASS) {
     return getCenterOfMass(config);
   }
 
@@ -98,7 +99,7 @@ function initializeBodies(config, options = {}) {
   if (bodies.length > 0) {
     const cameraAnchor = getCameraAnchor(bodiesConfig, activeCameraMode);
     camera.position.set(cameraAnchor.x, cameraAnchor.y, 100);
-    selectedBodyIndex = activeCameraMode === "centerOfMass" ? -1 : 0;
+    selectedBodyIndex = activeCameraMode === CameraMode.CENTER_OF_MASS ? -1 : 0;
     cameraTarget.set(cameraAnchor.x, cameraAnchor.y, 100);
     transitionInProgress = false;
   }
@@ -110,9 +111,8 @@ function initializeBodies(config, options = {}) {
   const container = document.getElementById("bodiesContainer");
   if (container) {
     BodyEditor.renderAndAttachListeners("bodiesContainer", pendingBodiesConfig, renderBodyCards);
-    BodyEditor.setBodyInputsDisabled("bodiesContainer", paused === false);
+    syncEditorDisabledState();
   }
-  setEditorControlsDisabled(paused === false);
 
   updateVelocityArrows();
   createBodyTrails();
@@ -124,11 +124,41 @@ let initialScenarioLoaded = false;
 
 function loadInitialScenario() {
   if (!initialScenarioLoaded) {
-    initializeBodies(cloneScenarioBodies("lagrangeTriangle"), {
-      cameraMode: SCENARIOS.lagrangeTriangle?.cameraMode || "firstBody",
+    initializeBodies(cloneScenarioBodies(ScenarioId.LAGRANGE_TRIANGLE), {
+      cameraMode: SCENARIOS[ScenarioId.LAGRANGE_TRIANGLE]?.cameraMode || CameraMode.FIRST_BODY,
     });
     initialScenarioLoaded = true;
   }
+}
+
+function renderNow() {
+  starField.update(camera);
+  renderer.render(scene, camera);
+}
+
+function renderIfPaused() {
+  if (paused) {
+    renderNow();
+  }
+}
+
+function syncEditorDisabledState() {
+  BodyEditor.setBodyInputsDisabled("bodiesContainer", !paused);
+  setEditorControlsDisabled(!paused);
+}
+
+function setPausedState(nextPaused, startButton) {
+  paused = nextPaused;
+  startButton.textContent = paused ? "Resume" : "Pause";
+  syncEditorDisabledState();
+
+  if (paused) {
+    cancelAnimationFrame(simulationId);
+    return;
+  }
+
+  resetSimulationClock();
+  simulationId = requestAnimationFrame(animateLoop);
 }
 
 /**
@@ -157,7 +187,7 @@ const camera = new THREE.OrthographicCamera(
 // Simulation parameters
 
 let paused = false;
-let integrator = 2;
+let integrator = Integrator.VERLET;
 let G = PHYSICS_CONFIG.gravitationalConstant;
 
 // Fixed physics step for accuracy
@@ -341,9 +371,9 @@ let lastFrameTime = null;
 
 function updateIntegratorLabel(value) {
   const labels = {
-    1: "Euler",
-    2: "Verlet",
-    3: "RK4",
+    [Integrator.EULER]: "Euler",
+    [Integrator.VERLET]: "Verlet",
+    [Integrator.RK4]: "RK4",
   };
   integratorValue.textContent = labels[value] || "Unknown";
 }
@@ -397,14 +427,10 @@ function setupBodyEditor() {
     const scenarioConfig = cloneScenarioBodies(scenarioKey);
     if (scenarioConfig.length > 0) {
       initializeBodies(scenarioConfig, {
-        cameraMode: SCENARIOS[scenarioKey]?.cameraMode || "firstBody",
+        cameraMode: SCENARIOS[scenarioKey]?.cameraMode || CameraMode.FIRST_BODY,
       });
       BodyEditor.clearError();
-
-      if (paused) {
-        starField.update(camera);
-        renderer.render(scene, camera);
-      }
+      renderIfPaused();
     }
   });
 
@@ -417,11 +443,7 @@ function setupBodyEditor() {
 
     initializeBodies(pendingBodiesConfig, { cameraMode: activeCameraMode });
     BodyEditor.clearError();
-
-    if (paused) {
-      starField.update(camera);
-      renderer.render(scene, camera);
-    }
+    renderIfPaused();
   };
 
   bodiesContainer?.addEventListener("input", (e) => {
@@ -488,17 +510,13 @@ function setupBodyEditor() {
     e.preventDefault();
     initializeBodies(activeBodiesConfig, { cameraMode: activeCameraMode });
     BodyEditor.clearError();
-
-    if (paused) {
-      starField.update(camera);
-      renderer.render(scene, camera);
-    }
+    renderIfPaused();
   });
 }
 
 function stepPhysics(dt, integrator, G) {
   switch (integrator) {
-    case 1: // EULER
+    case Integrator.EULER:
       bodies.forEach((body) => {
         body.state.acceleration.set(0, 0);
         bodies.forEach((other) => {
@@ -511,7 +529,7 @@ function stepPhysics(dt, integrator, G) {
         body.updateEuler(dt);
       });
       break;
-    case 2: // VERLET
+    case Integrator.VERLET:
       const oldStateVerlet = new Map();
       bodies.forEach((body) => {
         oldStateVerlet.set(body, {
@@ -532,7 +550,7 @@ function stepPhysics(dt, integrator, G) {
         body.updateVerletVelocity(dt, oldAccelerations.get(body), newAcc);
       });
       break;
-    case 3: // RK4
+    case Integrator.RK4:
       const oldStateRK4 = new Map();
       bodies.forEach((body) => {
         oldStateRK4.set(body, {
@@ -611,9 +629,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupButtons() {
-  const dtInput = $("#dtInput");
-  const dtValue = $("#dtValue");
-  const integratorInput = $("#integratorInput");
   const startButton = $("#resumeSimulation");
   const resetButton = $("#restartSimulation");
 
@@ -629,20 +644,7 @@ function setupButtons() {
   });
 
   startButton.addEventListener("click", () => {
-    if (paused) {
-      paused = false;
-      startButton.textContent = "Pause";
-      BodyEditor.setBodyInputsDisabled("bodiesContainer", true);
-      setEditorControlsDisabled(true);
-      resetSimulationClock();
-      simulationId = requestAnimationFrame(animateLoop);
-    } else {
-      paused = true;
-      startButton.textContent = "Resume";
-      BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
-      setEditorControlsDisabled(false);
-      cancelAnimationFrame(simulationId);
-    }
+    setPausedState(!paused, startButton);
   });
 
   resetButton.addEventListener("click", () => {
@@ -652,7 +654,7 @@ function setupButtons() {
     initializeBodies(activeBodiesConfig, { cameraMode: activeCameraMode });
 
     // Keep camera centered on the body that was selected before restart.
-    if (bodies.length > 0 && activeCameraMode !== "centerOfMass") {
+    if (bodies.length > 0 && activeCameraMode !== CameraMode.CENTER_OF_MASS) {
       selectedBodyIndex = targetBodyIndex;
       const targetBody = bodies[selectedBodyIndex];
       camera.position.set(targetBody.state.position.x, targetBody.state.position.y, 100);
@@ -661,17 +663,10 @@ function setupButtons() {
       camera.updateProjectionMatrix();
     }
 
-    // Ensure inputs and controls are enabled since we're paused
-    BodyEditor.setBodyInputsDisabled("bodiesContainer", false);
-    setEditorControlsDisabled(false);
-
     // Reset can teleport camera/body positions; recenter starfield before render.
-    starField.update(camera);
-    renderer.render(scene, camera);
-    paused = true;
-    startButton.textContent = "Resume";
+    setPausedState(true, startButton);
+    renderNow();
     resetSimulationClock();
-    cancelAnimationFrame(simulationId);
   });
 }
 
@@ -691,9 +686,7 @@ window.addEventListener("wheel", (event) => {
   camera.updateProjectionMatrix();
 
   // Render immediately during pause so the zoom update is visible.
-  if (paused) {
-    renderer.render(scene, camera);
-  }
+  renderIfPaused();
 });
 
 /**
@@ -704,7 +697,7 @@ window.addEventListener("wheel", (event) => {
 function focusOnBody(index) {
   if (index < 0 || index >= bodies.length) return;
 
-  activeCameraMode = "firstBody";
+  activeCameraMode = CameraMode.FIRST_BODY;
   selectedBodyIndex = index;
   const bodyPos = bodiesConfig[index];
 
@@ -731,7 +724,7 @@ function calculateAdaptiveSpeed(distance) {
  * Camera smoothly chases the selected body, updating target position each frame
  */
 function updateCameraTransition() {
-  if (activeCameraMode === "centerOfMass") {
+  if (activeCameraMode === CameraMode.CENTER_OF_MASS) {
     const centerOfMass = getCenterOfMass(
       bodies.map((body) => ({
         posX: body.state.position.x,
@@ -778,9 +771,7 @@ window.addEventListener("keydown", (event) => {
     }
 
     // Keep screen updated when hitting HOME in paused state.
-    if (paused) {
-      renderer.render(scene, camera);
-    }
+    renderIfPaused();
   }
 
   // Planet navigation with E (next) and Q (previous)
